@@ -5877,6 +5877,12 @@ Contact: cashmanagement@kaleidofin.com
             // Removed references to non-existent selectors for standalone version
 
             // Initialize on load - call after all functions are defined and event listeners are set up
+            // Ensure reports page is visible
+            const reportsPage = document.getElementById('reportsPage');
+            if (reportsPage) {
+                reportsPage.classList.add('active');
+            }
+            
             setTimeout(() => {
                 const firstTx = state.transactions.find(t => t.covenantsSet);
                 if (firstTx) {
