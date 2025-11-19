@@ -1215,39 +1215,59 @@
             });
             }
 
-            // Main View Navigation
-            dealScreenBtn.addEventListener('click', () => updateMainView('dealScreen'));
-            dealTrackBtn.addEventListener('click', () => {
-                updateMainView('dealTrack');
-                dealTrackNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-                const firstTab = dealTrackNav.querySelector('button');
-                if (firstTab) {
-                    firstTab.classList.add('active');
-                    const firstTxId = state.transactions.find(t => t.covenantsSet)?.id;
-                    updateDealTrackPage(firstTab.dataset.trackView + 'Page', firstTxId);
-                }
-            });
-            homeBtn.addEventListener('click', () => {
-                window.location.href = '../home/';
-            });
+            // Main View Navigation (only if elements exist - not in standalone reports version)
+            if (dealScreenBtn) {
+                dealScreenBtn.addEventListener('click', () => updateMainView('dealScreen'));
+            }
+            if (dealTrackBtn) {
+                dealTrackBtn.addEventListener('click', () => {
+                    updateMainView('dealTrack');
+                    const dealTrackNav = document.getElementById('dealTrackNav');
+                    if (dealTrackNav) {
+                        dealTrackNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                        const firstTab = dealTrackNav.querySelector('button');
+                        if (firstTab) {
+                            firstTab.classList.add('active');
+                            const firstTxId = state.transactions.find(t => t.covenantsSet)?.id;
+                            if (typeof updateDealTrackPage === 'function') {
+                                updateDealTrackPage(firstTab.dataset.trackView + 'Page', firstTxId);
+                            }
+                        }
+                    }
+                });
+            }
+            if (homeBtn) {
+                homeBtn.addEventListener('click', () => {
+                    window.location.href = '../home/';
+                });
+            }
             
-            document.getElementById('backToDealScreenBtn').addEventListener('click', () => {
-                updateMainView('dealScreen');
-                showPage('dealScreenHomePage');
-            });
+            const backToDealScreenBtn = document.getElementById('backToDealScreenBtn');
+            if (backToDealScreenBtn) {
+                backToDealScreenBtn.addEventListener('click', () => {
+                    updateMainView('dealScreen');
+                    showPage('dealScreenHomePage');
+                });
+            }
             
-            // Home Page Tabs
-            homeTabsNav.addEventListener('click', (e) => {
-                if(e.target.tagName === 'BUTTON') {
-                    updateHomeTab(e.target.dataset.tab);
-                }
-            });
+            // Home Page Tabs (only if exists)
+            if (homeTabsNav) {
+                homeTabsNav.addEventListener('click', (e) => {
+                    if(e.target.tagName === 'BUTTON') {
+                        updateHomeTab(e.target.dataset.tab);
+                    }
+                });
+            }
 
-            // Workflow Initiation
-            addNewOriginatorBtn.addEventListener('click', () => showPage('originatorOnboardingPage'));
-            createNewTransactionBtn.addEventListener('click', () => {
-                showPage('transactionTypePage');
-            });
+            // Workflow Initiation (only if elements exist)
+            if (addNewOriginatorBtn) {
+                addNewOriginatorBtn.addEventListener('click', () => showPage('originatorOnboardingPage'));
+            }
+            if (createNewTransactionBtn) {
+                createNewTransactionBtn.addEventListener('click', () => {
+                    showPage('transactionTypePage');
+                });
+            }
             
             function renderOriginatorInsights() {
                  originatorInsightsContainer.innerHTML = `
@@ -1290,7 +1310,8 @@
                 `;
             }
 
-            // Originator Onboarding Workflow
+            // Originator Onboarding Workflow (only if elements exist)
+            if (uploadOriginatorFilesBtn && originatorUpload && originatorAnalyzing && originatorAnalysisResult) {
             uploadOriginatorFilesBtn.addEventListener('click', () => {
                 originatorUpload.classList.add('hidden');
                 originatorAnalyzing.classList.remove('hidden');
@@ -1302,13 +1323,17 @@
                     const extractedCategory = "Microfinance Bank (MFB)";
                     const extractedScore = "A+";
 
-                    analysisOriginatorName.textContent = extractedName;
-                    analysisOriginatorCategory.textContent = extractedCategory;
+                    if (analysisOriginatorName) analysisOriginatorName.textContent = extractedName;
+                    if (analysisOriginatorCategory) analysisOriginatorCategory.textContent = extractedCategory;
                     const analysisKiScoreBtn = document.getElementById('analysisKiScore');
-                    analysisKiScoreBtn.dataset.name = extractedName;
-                    analysisKiScoreBtn.textContent = extractedScore;
+                    if (analysisKiScoreBtn) {
+                        analysisKiScoreBtn.dataset.name = extractedName;
+                        analysisKiScoreBtn.textContent = extractedScore;
+                    }
                     
-                    renderOriginatorInsights();
+                    if (typeof renderOriginatorInsights === 'function') {
+                        renderOriginatorInsights();
+                    }
 
                     createOrUpdateChart('assetClassDistChart', { type: 'doughnut', data: { labels: ['Boda-Boda', 'Agri-Finance', 'SME Capital', 'Digital Loans'], datasets: [{ data: [35, 25, 20, 20], backgroundColor: ['#14b8a6', '#5eead4', '#0d9488', '#0f766e'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
                     createOrUpdateChart('geographicalDistChart', { type: 'doughnut', data: { labels: ['Nairobi', 'Rift Valley', 'Coast', 'Nyanza', 'Other'], datasets: [{ data: [45, 25, 15, 10, 5], backgroundColor: ['#14b8a6', '#5eead4', '#0d9488', '#0f766e', '#99f6e4'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
@@ -1318,23 +1343,36 @@
                     createOrUpdateChart('yieldVsCofChart', { type: 'line', data: { labels: ['Q1 24', 'Q2 24', 'Q3 24', 'Q4 24', 'Q1 25', 'Q2 25'], datasets: [{ label: 'Portfolio Yield', data: [35.1, 35.3, 35.0, 34.8, 34.6, 34.5], borderColor: '#14b8a6' }, { label: 'Cost of Funds', data: [19.1, 19.3, 19.5, 19.8, 20.0, 20.5], borderColor: '#f97316' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
                 }, 2000);
             });
+            }
+            if (onboardOriginatorBtn && analysisOriginatorName) {
             onboardOriginatorBtn.addEventListener('click', () => {
                 const kiScoreButton = document.getElementById('analysisKiScore');
-                const newOriginator = {
-                    id: analysisOriginatorName.textContent.toLowerCase().replace(/\s/g, ''),
-                    name: analysisOriginatorName.textContent,
-                    score: kiScoreButton.textContent,
-                    par: document.getElementById('analysisPar').textContent,
-                    yield: document.getElementById('analysisYield').textContent,
-                    aum: document.getElementById('analysisAum').textContent.replace('KES ', '')
-                };
-                state.originators.push(newOriginator);
-                renderOriginators();
-                showPage('dealScreenHomePage');
-                updateHomeTab('originators');
-                originatorAnalysisResult.classList.add('hidden');
-                originatorUpload.classList.remove('hidden');
+                const analysisPar = document.getElementById('analysisPar');
+                const analysisYield = document.getElementById('analysisYield');
+                const analysisAum = document.getElementById('analysisAum');
+                
+                if (kiScoreButton && analysisPar && analysisYield && analysisAum) {
+                    const newOriginator = {
+                        id: analysisOriginatorName.textContent.toLowerCase().replace(/\s/g, ''),
+                        name: analysisOriginatorName.textContent,
+                        score: kiScoreButton.textContent,
+                        par: analysisPar.textContent,
+                        yield: analysisYield.textContent,
+                        aum: analysisAum.textContent.replace('KES ', '')
+                    };
+                    state.originators.push(newOriginator);
+                    if (typeof renderOriginators === 'function') {
+                        renderOriginators();
+                    }
+                    showPage('dealScreenHomePage');
+                    if (typeof updateHomeTab === 'function') {
+                        updateHomeTab('originators');
+                    }
+                    if (originatorAnalysisResult) originatorAnalysisResult.classList.add('hidden');
+                    if (originatorUpload) originatorUpload.classList.remove('hidden');
+                }
             });
+            }
 
             // Pool Creation Workflow
             // Database Fields Definition
@@ -1524,10 +1562,12 @@
                 'Score', 'Location', 'Purpose', 'Collateral', 'EMI'
             ];
 
+            if (uploadPoolBtn) {
             uploadPoolBtn.addEventListener('click', () => {
                 populateMappingFields();
                 updatePoolSubStep('poolMappingSubStep');
             });
+            }
             
             function populateMappingFields() {
                 const container = document.getElementById('mappingFieldsContainer');
@@ -1637,7 +1677,9 @@
             }
             
             // Event delegation for mapping actions
-            document.getElementById('mappingFieldsContainer').addEventListener('click', (e) => {
+            const mappingFieldsContainer = document.getElementById('mappingFieldsContainer');
+            if (mappingFieldsContainer) {
+            mappingFieldsContainer.addEventListener('click', (e) => {
                 if (e.target.closest('.add-validation-btn')) {
                     const index = e.target.closest('.add-validation-btn').dataset.index;
                     const row = document.querySelector(`[data-index="${index}"]`);
@@ -1653,6 +1695,7 @@
                     }
                 }
             });
+            }
             
             // Create New Field Modal
             document.getElementById('createNewFieldBtn')?.addEventListener('click', () => {
@@ -2141,10 +2184,14 @@
                 document.getElementById(id)?.addEventListener('change', updateUnifiedFiltersDisplay);
             });
 
-            validateMappedPoolBtn.addEventListener('click', () => updatePoolSubStep('poolValidationErrorSubStep'));
+            if (validateMappedPoolBtn) {
+                validateMappedPoolBtn.addEventListener('click', () => updatePoolSubStep('poolValidationErrorSubStep'));
+            }
+            if (reuploadPoolBtn) {
             reuploadPoolBtn.addEventListener('click', () => {
                 updatePoolSubStep('poolStructuringSubStep');
             });
+            }
 
             function calculateWaterfall(poolValue, lossRate) {
                 const totalPrincipal = poolValue * 0.85;
@@ -2855,19 +2902,26 @@
             }
 
 
-            applyFiltersBtn.addEventListener('click', applyFilters);
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', applyFilters);
+            }
 
-            finalizePoolBtn.addEventListener('click', () => {
-                finalizePoolModal.classList.add('active');
-                finalizePoolModal.style.display = 'flex';
-            });
+            if (finalizePoolBtn && finalizePoolModal) {
+                finalizePoolBtn.addEventListener('click', () => {
+                    finalizePoolModal.classList.add('active');
+                    finalizePoolModal.style.display = 'flex';
+                });
+            }
             
-            cancelFinalizeBtn.addEventListener('click', () => {
-                finalizePoolModal.classList.remove('active');
-                finalizePoolModal.style.display = 'none';
-            });
+            if (cancelFinalizeBtn && finalizePoolModal) {
+                cancelFinalizeBtn.addEventListener('click', () => {
+                    finalizePoolModal.classList.remove('active');
+                    finalizePoolModal.style.display = 'none';
+                });
+            }
             
-            saveTransactionBtn.addEventListener('click', () => {
+            if (saveTransactionBtn && finalizeTransactionNameInput) {
+                saveTransactionBtn.addEventListener('click', () => {
                 const name = finalizeTransactionNameInput.value.trim();
                 const comments = document.getElementById('finalizeComments').value.trim();
                 
@@ -2901,15 +2955,23 @@
                     document.getElementById('finalizePoolBtn').classList.add('hidden');
                     
                     // Close modal
-                    finalizePoolModal.classList.remove('active');
-                    finalizePoolModal.style.display = 'none';
-                    finalizeTransactionNameInput.value = '';
-                    document.getElementById('finalizeComments').value = '';
+                    if (finalizePoolModal) {
+                        finalizePoolModal.classList.remove('active');
+                        finalizePoolModal.style.display = 'none';
+                    }
+                    if (finalizeTransactionNameInput) {
+                        finalizeTransactionNameInput.value = '';
+                    }
+                    const finalizeComments = document.getElementById('finalizeComments');
+                    if (finalizeComments) {
+                        finalizeComments.value = '';
+                    }
                     
                     // Show success message
                     alert('✅ Pool finalized successfully! You can now download the filtered loan file or proceed to generate cashflows.');
                 }
             });
+            }
             
             // Download Filtered Pool CSV
             document.getElementById('downloadFilteredPoolBtn')?.addEventListener('click', () => {
@@ -3331,39 +3393,61 @@
             }
 
             function setupRangeSlider(minSlider, maxSlider, minLabel, maxLabel, formatter) {
+                if (!minSlider || !maxSlider || !minLabel || !maxLabel) {
+                    return; // Skip if any required elements are missing
+                }
                 minSlider.addEventListener('input', () => {
                     if (parseInt(minSlider.value) > parseInt(maxSlider.value)) {
                         minSlider.value = maxSlider.value;
                     }
-                    minLabel.textContent = formatter(minSlider.value);
+                    if (minLabel) {
+                        minLabel.textContent = formatter(minSlider.value);
+                    }
                 });
                 maxSlider.addEventListener('input', () => {
                      if (parseInt(maxSlider.value) < parseInt(minSlider.value)) {
                         maxSlider.value = minSlider.value;
                     }
-                    maxLabel.textContent = formatter(maxSlider.value);
+                    if (maxLabel) {
+                        maxLabel.textContent = formatter(maxSlider.value);
+                    }
                 });
             }
 
-            setupRangeSlider(kiScoreMinSlider, kiScoreMaxSlider, kiScoreMinLabel, kiScoreMaxLabel, val => val);
-            setupRangeSlider(loanAmountMinSlider, loanAmountMaxSlider, loanAmountMinLabel, loanAmountMaxLabel, val => `${val/1000}k`);
-            setupRangeSlider(tenureMinSlider, tenureMaxSlider, tenureMinLabel, tenureMaxLabel, val => val);
-            setupRangeSlider(interestRateMinSlider, interestRateMaxSlider, interestRateMinLabel, interestRateMaxLabel, val => `${val}%`);
+            // Only setup sliders if they exist (not in standalone reports version)
+            if (kiScoreMinSlider && kiScoreMaxSlider && kiScoreMinLabel && kiScoreMaxLabel) {
+                setupRangeSlider(kiScoreMinSlider, kiScoreMaxSlider, kiScoreMinLabel, kiScoreMaxLabel, val => val);
+            }
+            if (loanAmountMinSlider && loanAmountMaxSlider && loanAmountMinLabel && loanAmountMaxLabel) {
+                setupRangeSlider(loanAmountMinSlider, loanAmountMaxSlider, loanAmountMinLabel, loanAmountMaxLabel, val => `${val/1000}k`);
+            }
+            if (tenureMinSlider && tenureMaxSlider && tenureMinLabel && tenureMaxLabel) {
+                setupRangeSlider(tenureMinSlider, tenureMaxSlider, tenureMinLabel, tenureMaxLabel, val => val);
+            }
+            if (interestRateMinSlider && interestRateMaxSlider && interestRateMinLabel && interestRateMaxLabel) {
+                setupRangeSlider(interestRateMinSlider, interestRateMaxSlider, interestRateMinLabel, interestRateMaxLabel, val => `${val}%`);
+            }
 
 
 
             // --- DealTrack Initialization ---
-            dealTrackNav.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    dealTrackNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    const pageId = e.target.dataset.trackView + 'Page';
-                    const txId = transactionSelector.value;
-                    updateDealTrackPage(pageId, txId);
-                }
-            });
+            if (dealTrackNav) {
+                dealTrackNav.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        dealTrackNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        const pageId = e.target.dataset.trackView + 'Page';
+                        const transactionSelector = document.getElementById('transactionSelector');
+                        const txId = transactionSelector ? transactionSelector.value : null;
+                        if (typeof updateDealTrackPage === 'function') {
+                            updateDealTrackPage(pageId, txId);
+                        }
+                    }
+                });
+            }
 
-            saveCovenantBtn.addEventListener('click', () => {
+            if (saveCovenantBtn) {
+                saveCovenantBtn.addEventListener('click', () => {
                 const tx = state.transactions.find(t => t.id === state.currentTransactionId);
                 if (tx) {
                     tx.covenantsSet = true;
@@ -3371,11 +3455,16 @@
                         initializeCovenantData();
                     }
                 }
-                renderActiveTransactions();
+                if (typeof renderActiveTransactions === 'function') {
+                    renderActiveTransactions();
+                }
                 updateMainView('dealScreen');
                 showPage('dealScreenHomePage');
-                updateHomeTab('transactions');
+                if (typeof updateHomeTab === 'function') {
+                    updateHomeTab('transactions');
+                }
             });
+            }
 
             // --- Covenant Monitoring Logic ---
             function populateTransactionSelector(selectedTxId) {
