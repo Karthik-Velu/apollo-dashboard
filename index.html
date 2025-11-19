@@ -691,6 +691,7 @@
 
             function initializeData() {
                 try {
+                console.log('initializeData() called - starting data initialization');
                 state.originators = [
                     { id: 'mc', name: 'Acacia Finance Ltd', score: 'BBB', par: '5.5%', yield: '36.0%', aum: '3.2B' },
                     { id: 'ak', name: 'Baobab Micro Bank', score: 'AA-', par: '3.8%', yield: '32.5%', aum: '6.8B' },
@@ -728,6 +729,7 @@
                 renderOriginators();
                 renderActiveTransactions();
                 renderAvailablePortfolios();
+                console.log('initializeData() completed - transactions:', state.transactions.length, state.transactions);
                 } catch (e) {
                     console.error('Error in initializeData:', e);
                     // Ensure at least originators array is initialized
@@ -879,12 +881,21 @@
 
             function updateMainView(targetView, txId = null) {
                 state.currentView = targetView;
-                dealScreenView.classList.toggle('active', state.currentView === 'dealScreen');
-                dealTrackView.classList.toggle('active', state.currentView === 'dealTrack');
-                dealScreenBtn.classList.toggle('active', state.currentView === 'dealScreen');
-                dealTrackBtn.classList.toggle('active', state.currentView === 'dealTrack');
+                // In standalone reports version, these views may not exist
+                if (dealScreenView) {
+                    dealScreenView.classList.toggle('active', state.currentView === 'dealScreen');
+                }
+                if (dealTrackView) {
+                    dealTrackView.classList.toggle('active', state.currentView === 'dealTrack');
+                }
+                if (dealScreenBtn) {
+                    dealScreenBtn.classList.toggle('active', state.currentView === 'dealScreen');
+                }
+                if (dealTrackBtn) {
+                    dealTrackBtn.classList.toggle('active', state.currentView === 'dealTrack');
+                }
 
-                if(targetView === 'dealTrack') {
+                if(targetView === 'dealTrack' && typeof populateTransactionSelector === 'function') {
                     populateTransactionSelector(txId);
                 }
             }
@@ -892,7 +903,13 @@
             function showPage(pageId) {
                 state.previousPage = state.currentPage;
                 state.currentPage = pageId;
-                pageViews.forEach(page => page.classList.toggle('active', page.id === pageId));
+                pageViews.forEach(page => {
+                    // Don't hide reportsPage in standalone version - it should always stay visible
+                    if (page.id === 'reportsPage') {
+                        return; // Skip reportsPage - keep it visible
+                    }
+                    page.classList.toggle('active', page.id === pageId);
+                });
             }
             
             function updateDealTrackPage(pageId, txId = null) {
@@ -978,8 +995,23 @@
             }
 
             function createOrUpdateChart(chartId, typeOrConfig, dataOrOptions, optionsParam) {
-                const ctx = document.getElementById(chartId)?.getContext('2d');
-                if (!ctx) return;
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.warn('Chart canvas not found:', chartId);
+                    return;
+                }
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.warn('Could not get 2d context for:', chartId);
+                    return;
+                }
+                
+                // Verify Chart.js is available
+                if (typeof Chart === 'undefined') {
+                    console.error('Chart.js is not loaded! Cannot create chart:', chartId);
+                    return;
+                }
+                
                 if (state.charts[chartId]) state.charts[chartId].destroy();
                 
                 // Support both old signature (chartId, config) and new signature (chartId, type, data, options)
@@ -996,7 +1028,12 @@
                     config = typeOrConfig;
                 }
                 
-                state.charts[chartId] = new Chart(ctx, config);
+                try {
+                    state.charts[chartId] = new Chart(ctx, config);
+                    console.log('Chart created successfully:', chartId);
+                } catch (error) {
+                    console.error('Error creating chart:', chartId, error);
+                }
             }
             
             function renderVariables(container, title, variables) {
@@ -3802,11 +3839,14 @@
             }
 
             function renderReportsPage(txId) {
+                console.log('renderReportsPage() called with txId:', txId);
+                console.log('state.transactions:', state.transactions);
                 // Safety check: ensure transactions are available
                 if (!state.transactions || state.transactions.length === 0) {
                     console.warn('No transactions available for reports');
                     return;
                 }
+                console.log('Transactions available, proceeding with render...');
 
                 // Populate transaction selector for reports
                 const reportsSelector = document.getElementById('reportsTransactionSelector');
@@ -3836,7 +3876,9 @@
                 }
 
                 // Generate mock loan data
+                console.log('Generating mock loan data...');
                 const mockLoans = generateMockLoanData();
+                console.log('Generated', mockLoans.length, 'mock loans');
                 const currentDate = new Date();
                 const currentMonthIndex = 14; // Assuming we're at month 14
 
@@ -3933,6 +3975,7 @@
                     });
                 }
 
+                console.log('Creating reportCollectionChart with', monthlyLabels.length, 'data points');
                 createOrUpdateChart('reportCollectionChart', {
                     type: 'line',
                     data: {
@@ -6318,13 +6361,21 @@ Contact: cashmanagement@kaleidofin.com
             // Initialize reports page after data is loaded
             setTimeout(() => {
                 try {
+                    console.log('Initializing reports page...');
+                    console.log('state.transactions:', state.transactions);
+                    console.log('state.transactions.length:', state.transactions?.length);
+                    console.log('Chart.js available:', typeof Chart !== 'undefined');
+                    
                     // Initialize reports page with transaction data
                     if (state.transactions && state.transactions.length > 0) {
+                        console.log('Found', state.transactions.length, 'transactions');
                         const firstTx = state.transactions.find(t => t.covenantsSet);
                         if (firstTx) {
+                            console.log('Using transaction with covenantsSet:', firstTx.id);
                             renderReportsPage(firstTx.id);
                         } else {
                             // Fallback to first transaction if none have covenantsSet
+                            console.log('No transactions with covenantsSet, using first transaction:', state.transactions[0].id);
                             renderReportsPage(state.transactions[0].id);
                         }
                     } else {
