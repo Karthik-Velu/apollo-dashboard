@@ -3802,17 +3802,37 @@
             }
 
             function renderReportsPage(txId) {
+                // Safety check: ensure transactions are available
+                if (!state.transactions || state.transactions.length === 0) {
+                    console.warn('No transactions available for reports');
+                    return;
+                }
+
                 // Populate transaction selector for reports
                 const reportsSelector = document.getElementById('reportsTransactionSelector');
                 if (reportsSelector) {
                     reportsSelector.innerHTML = '';
-                    state.transactions.filter(t => t.covenantsSet).forEach(tx => {
+                    // First, try to populate with transactions that have covenantsSet
+                    const transactionsWithCovenants = state.transactions.filter(t => t.covenantsSet);
+                    const transactionsToShow = transactionsWithCovenants.length > 0 
+                        ? transactionsWithCovenants 
+                        : state.transactions; // Fallback to all transactions if none have covenantsSet
+                    
+                    transactionsToShow.forEach(tx => {
                         const option = document.createElement('option');
                         option.value = tx.id;
                         option.textContent = tx.name;
                         option.selected = tx.id === txId;
                         reportsSelector.appendChild(option);
                     });
+                    
+                    // If txId is not in the list, select the first one
+                    if (txId && !transactionsToShow.find(t => t.id === txId)) {
+                        if (transactionsToShow.length > 0) {
+                            reportsSelector.value = transactionsToShow[0].id;
+                            txId = transactionsToShow[0].id;
+                        }
+                    }
                 }
 
                 // Generate mock loan data
@@ -5817,22 +5837,34 @@ Contact: cashmanagement@kaleidofin.com
 
             // Event listeners for reports
             document.getElementById('downloadPMAReport')?.addEventListener('click', () => {
-                const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
+                const selector = document.getElementById('reportsTransactionSelector');
+                const txId = selector?.value || (state.transactions && state.transactions.length > 0 
+                    ? (state.transactions.find(t => t.covenantsSet) || state.transactions[0])?.id 
+                    : null);
                 if (txId) downloadPMAReportPDF(txId);
             });
 
             document.getElementById('previewPMAReport')?.addEventListener('click', () => {
-                const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
+                const selector = document.getElementById('reportsTransactionSelector');
+                const txId = selector?.value || (state.transactions && state.transactions.length > 0 
+                    ? (state.transactions.find(t => t.covenantsSet) || state.transactions[0])?.id 
+                    : null);
                 if (txId) previewPMAReport(txId);
             });
 
             document.getElementById('downloadCashReport')?.addEventListener('click', () => {
-                const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
+                const selector = document.getElementById('reportsTransactionSelector');
+                const txId = selector?.value || (state.transactions && state.transactions.length > 0 
+                    ? (state.transactions.find(t => t.covenantsSet) || state.transactions[0])?.id 
+                    : null);
                 if (txId) downloadCashManagerReportPDF(txId);
             });
 
             document.getElementById('previewCashReport')?.addEventListener('click', () => {
-                const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
+                const selector = document.getElementById('reportsTransactionSelector');
+                const txId = selector?.value || (state.transactions && state.transactions.length > 0 
+                    ? (state.transactions.find(t => t.covenantsSet) || state.transactions[0])?.id 
+                    : null);
                 if (txId) previewCashReport(txId);
             });
 
@@ -5885,21 +5917,7 @@ Contact: cashmanagement@kaleidofin.com
             // Removed references to non-existent selectors for standalone version
 
             // Initialize on load - call after all functions are defined and event listeners are set up
-            // Ensure reports page is visible
-            const reportsPage = document.getElementById('reportsPage');
-            if (reportsPage) {
-                reportsPage.classList.add('active');
-            }
-            
-            setTimeout(() => {
-                const firstTx = state.transactions.find(t => t.covenantsSet);
-                if (firstTx) {
-                    renderReportsPage(firstTx.id);
-                } else if (state.transactions.length > 0) {
-                    // Fallback to first transaction if none have covenantsSet
-                    renderReportsPage(state.transactions[0].id);
-                }
-            }, 100);
+            // Reports initialization will happen after data is loaded (see main initialization block)
 
             function initializeMappingFields() {
                 const container = document.getElementById('mappingFieldsContainer');
@@ -6281,9 +6299,11 @@ Contact: cashmanagement@kaleidofin.com
             initializeData();
             initializeMappingFields();
             initializeCountyMultiSelect();
-                updateMainView('dealScreen');
-                showPage('dealScreenHomePage');
-                updateHomeTab('originators');
+                // For standalone reports page, ensure reports page is visible
+                const reportsPage = document.getElementById('reportsPage');
+                if (reportsPage) {
+                    reportsPage.classList.add('active');
+                }
             } catch (e) {
                 console.error('Error during initial page load:', e);
                 // Try to at least show the page even if initialization fails
@@ -6295,6 +6315,26 @@ Contact: cashmanagement@kaleidofin.com
                 }
             }
             
+            // Initialize reports page after data is loaded
+            setTimeout(() => {
+                try {
+                    // Initialize reports page with transaction data
+                    if (state.transactions && state.transactions.length > 0) {
+                        const firstTx = state.transactions.find(t => t.covenantsSet);
+                        if (firstTx) {
+                            renderReportsPage(firstTx.id);
+                        } else {
+                            // Fallback to first transaction if none have covenantsSet
+                            renderReportsPage(state.transactions[0].id);
+                        }
+                    } else {
+                        console.warn('No transactions available for reports');
+                    }
+                } catch (e) {
+                    console.error('Error initializing reports page:', e);
+                }
+            }, 100);
+
             // Initialize non-critical features after a delay (ensures DOM is ready)
             setTimeout(() => {
                 try {
