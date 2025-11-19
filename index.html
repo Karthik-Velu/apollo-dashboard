@@ -8600,6 +8600,17 @@ const toggleIds = [
                     if (txId) renderReportsPage(txId);
                 });
             });
+
+            // Initialize on load - call after all functions are defined and event listeners are set up
+            setTimeout(() => {
+                const firstTx = state.transactions.find(t => t.covenantsSet);
+                if (firstTx) {
+                    renderReportsPage(firstTx.id);
+                } else if (state.transactions.length > 0) {
+                    // Fallback to first transaction if none have covenantsSet
+                    renderReportsPage(state.transactions[0].id);
+                }
+            }, 100);
         });
     </script>
 </body>
