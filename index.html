@@ -8564,27 +8564,50 @@ function previewCashReport(txId) {
             }
 
             // Event listeners
-document.getElementById('downloadPMAReport')?.addEventListener('click', () => {
+            document.getElementById('downloadPMAReport')?.addEventListener('click', () => {
                 const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
                 if (txId) downloadPMAReportPDF(txId);
-document.getElementById('previewPMAReport')?.addEventListener('click', () => {
+            });
+            
+            document.getElementById('previewPMAReport')?.addEventListener('click', () => {
                 const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
                 if (txId) previewPMAReport(txId);
-document.getElementById('downloadCashReport')?.addEventListener('click', () => {
+            });
+            
+            document.getElementById('downloadCashReport')?.addEventListener('click', () => {
                 const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
                 if (txId) downloadCashManagerReportPDF(txId);
-document.getElementById('previewCashReport')?.addEventListener('click', () => {
+            });
+            
+            document.getElementById('previewCashReport')?.addEventListener('click', () => {
                 const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
                 if (txId) previewCashReport(txId);
-document.getElementById('reportsTransactionSelector')?.addEventListener('change', (e) => {
+            });
+            
+            document.getElementById('reportsTransactionSelector')?.addEventListener('change', (e) => {
                 renderReportsPage(e.target.value);
-document.getElementById('reportMonthSelector')?.addEventListener('change', (e) => {
+            });
+            
+            document.getElementById('reportMonthSelector')?.addEventListener('change', (e) => {
                 const [year, month] = e.target.value.split('-');
-document.getElementById('closePreviewModalX')?.addEventListener('click', closeReportPreview);
-document.getElementById('closePreviewModalBtn')?.addEventListener('click', closeReportPreview);
-document.getElementById('reportPreviewModal')?.addEventListener('click', (e) => {
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthName = monthNames[parseInt(month) - 1];
+                document.getElementById('reportPeriodDisplay').textContent = `${monthName} ${year}`;
+                const startDate = `01-${monthName.substring(0,3)}-${year}`;
+                const endDate = new Date(year, month, 0).getDate() + `-${monthName.substring(0,3)}-${year}`;
+                document.getElementById('collectionPeriodDisplay').textContent = `${startDate} to ${endDate}`;
+                const nextMonth = parseInt(month) === 12 ? 1 : parseInt(month) + 1;
+                const nextYear = parseInt(month) === 12 ? parseInt(year) + 1 : year;
+                document.getElementById('paymentDateDisplay').textContent = `01-${monthNames[nextMonth - 1].substring(0,3)}-${nextYear}`;
+            });
+            
+            document.getElementById('closePreviewModalX')?.addEventListener('click', closeReportPreview);
+            document.getElementById('closePreviewModalBtn')?.addEventListener('click', closeReportPreview);
+            document.getElementById('reportPreviewModal')?.addEventListener('click', (e) => {
                 if (e.target.id === 'reportPreviewModal') {
                     closeReportPreview();
+                }
+            });
 
             // Toggle listeners
 const toggleIds = [
@@ -8603,7 +8626,8 @@ const toggleIds = [
                 document.getElementById(toggleId)?.addEventListener('change', () => {
                     const txId = document.getElementById('reportsTransactionSelector')?.value || state.transactions.filter(t => t.covenantsSet)[0]?.id;
                     if (txId) renderReportsPage(txId);
-                })
+                });
+            });
         });
     </script>
 </body>
